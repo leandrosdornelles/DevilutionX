@@ -394,6 +394,7 @@ tl::expected<item_misc_id, std::string> ParseItemMiscId(std::string_view value)
 	if (value == "OILHARD") return IMISC_OILHARD;
 	if (value == "OILIMP") return IMISC_OILIMP;
 	if (value == "OILLAST") return IMISC_OILLAST;
+	if (value == "GEMDEF") return IMISC_GEMDEF;
 	if (value == "MAPOFDOOM") return IMISC_MAPOFDOOM;
 	if (value == "EAR") return IMISC_EAR;
 	if (value == "SPECELIX") return IMISC_SPECELIX;

@@ -154,6 +154,13 @@ enum class SpellFlag : uint8_t {
 };
 use_enum_as_flags(SpellFlag);
 
+enum class VampireState : uint8_t {
+	Normal,
+	Thirsty,
+	Starving,
+	Critical
+};
+
 /* @brief When the player dies, what is the reason/source why? */
 enum class DeathReason {
 	/* @brief Monster or Trap (dungeon) */
@@ -274,6 +281,11 @@ struct Player {
 	int destParam3;
 	int destParam4;
 	int _pGold;
+
+	// Sede de Sangue do Vampiro (0-100)
+	int _pBloodLevel;
+	VampireState _pVampireState;
+	int _pLastBloodLevelDecrementTime;
 
 	/**
 	 * @brief Contains Information for current Animation

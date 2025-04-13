@@ -54,6 +54,7 @@ enum _item_indexes : int16_t { // TODO defines all indexes in AllItemsList
 	IDI_LAZSTAFF,
 	IDI_RESURRECT,
 	IDI_OIL,
+	IDI_GEMDEF,
 	IDI_SHORTSTAFF,
 	IDI_BARDSWORD,
 	IDI_BARDDAGGER,
@@ -465,6 +466,7 @@ enum item_misc_id : int8_t {
 	IMISC_OILHARD,
 	IMISC_OILIMP,
 	IMISC_OILLAST,
+	IMISC_GEMDEF, // Gema da Defesa
 	IMISC_MAPOFDOOM,
 	IMISC_EAR,
 	IMISC_SPECELIX,

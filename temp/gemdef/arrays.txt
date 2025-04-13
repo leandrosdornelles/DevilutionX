@@ -1,0 +1,9 @@
+// Arrays para Gema da Defesa
+int GemLevels[] = { 5 }; // Nível mínimo do monstro para dropar
+int GemValues[] = { 3000 }; // Valor da gema
+item_misc_id GemMagic[] = {
+	IMISC_GEMDEF,
+};
+char GemNames[1][25] = {
+	N_("Gema da Defesa"),
+};

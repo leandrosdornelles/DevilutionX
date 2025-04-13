@@ -35,6 +35,7 @@ IDI_LGTFORGE	0	Armor	Armor	BOVINE	HeavyArmor	BOVINE	Bovine Plate		0	40	0	0	0	0	5
 IDI_LAZSTAFF	0	Misc	Unequippable	STAFF_OF_LAZARUS	Misc	LAZSTAFF	Staff of Lazarus		0	0	0	0	0	0	0	0	0		NONE	Null	false	0
 IDI_RESURRECT	0	Misc	Unequippable	SCROLL_OF	Misc	NONE	Scroll of Resurrect		1	0	0	0	0	0	0	0	0		SCROLLT	Resurrect	true	250
 IDI_OIL	0	Misc	Unequippable	OIL	Misc	NONE	Blacksmith Oil		1	0	0	0	0	0	0	0	0		OILBSMTH	Null	true	100
+IDI_GEMDEF	0	Misc	Unequippable	BLOOD_STONE	Misc	NONE	Gema da Defesa		1	0	0	0	0	0	0	0	0		GEMDEF	Null	true	3000
 IDI_SHORTSTAFF	0	Weapon	Two-handed	SHORT_STAFF	Staff	NONE	Short Staff		1	25	2	4	0	0	0	0	0		NONE	Null	false	20
 IDI_BARDSWORD	0	Weapon	One-handed	SHORT_SWORD	Sword	NONE	Sword		2	8	1	5	0	0	15	0	20		NONE	Null	false	20
 IDI_BARDDAGGER	0	Weapon	One-handed	DAGGER	Sword	NONE	Dagger		1	16	1	4	0	0	0	0	0		NONE	Null	false	20

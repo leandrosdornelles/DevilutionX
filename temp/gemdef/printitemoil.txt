@@ -1,0 +1,11 @@
+case devilution::IMISC_OILIMP:
+AddInfoBoxString(_("greatly increases the armor"));
+AddInfoBoxString(_("class of armor and shields"));
+break;
+case devilution::IMISC_GEMDEF:
+AddInfoBoxString(_("increases armor class by 10%"));
+AddInfoBoxString(_("of armor, shields and helmets"));
+break;
+case devilution::IMISC_RUNEF:
+AddInfoBoxString(_("sets fire trap"));
+break;

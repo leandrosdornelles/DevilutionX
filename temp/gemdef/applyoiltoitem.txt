@@ -1,0 +1,17 @@
+case devilution::IMISC_OILIMP:
+if (item._iAC < 120) {
+item._iAC += devilution::RandomIntBetween(3, 5);
+}
+break;
+case devilution::IMISC_GEMDEF:
+if (item._iClass == devilution::ICLASS_WEAPON) {
+return false;
+}
+if (item._iAC > 0) {
+int acBonus = item._iAC / 10;
+if (acBonus < 1) acBonus = 1;
+item._iAC += acBonus;
+}
+break;
+default:
+return false;

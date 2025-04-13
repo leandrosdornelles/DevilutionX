@@ -45,6 +45,7 @@ set(devilutionx_assets
   arena/church.dun
   arena/circle_of_death.dun
   arena/hell.dun
+  data/blau.clx
   data/boxleftend.clx
   data/boxmiddle.clx
   data/boxrightend.clx

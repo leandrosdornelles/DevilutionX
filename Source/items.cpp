@@ -189,6 +189,16 @@ char OilNames[10][25] = {
 	N_("Oil of Imperviousness")
 };
 
+// Arrays para Gema da Defesa
+int GemLevels[] = { 1 }; // Nível mínimo do monstro para dropar
+int GemValues[] = { 3000 }; // Valor da gema
+item_misc_id GemMagic[] = {
+	IMISC_GEMDEF,
+};
+char GemNames[1][25] = {
+	N_("Gema da Defesa"),
+};
+
 /** Map of item type .cel file names. */
 const char *const ItemDropNames[] = {
 	"armor2",
@@ -1323,6 +1333,33 @@ void GetOilType(Item &item, int maxLvl)
 	item._iIvalue = OilValues[t];
 }
 
+void GetGemType(Item &item, int maxLvl)
+{
+	int cnt = 1;
+	int8_t rnd[32] = { 0 };
+
+	if (!gbIsMultiplayer) {
+		if (maxLvl == 0)
+			maxLvl = 1;
+
+		cnt = 0;
+		for (size_t j = 0; j < sizeof(GemLevels) / sizeof(GemLevels[0]); j++) {
+			if (GemLevels[j] <= maxLvl) {
+				rnd[cnt] = static_cast<int8_t>(j);
+				cnt++;
+			}
+		}
+	}
+
+	int8_t t = rnd[GenerateRnd(cnt)];
+
+	CopyUtf8(item._iName, GemNames[t], ItemNameLength);
+	CopyUtf8(item._iIName, GemNames[t], ItemNameLength);
+	item._iMiscId = GemMagic[t];
+	item._ivalue = GemValues[t];
+	item._iIvalue = GemValues[t];
+}
+
 void GetItemBonus(const Player &player, Item &item, int minlvl, int maxlvl, bool onlygood, bool allowspells)
 {
 	if (minlvl > 25)
@@ -1375,16 +1412,8 @@ _item_indexes GetItemIndexForDroppableItem(bool considerDropRate, tl::function_r
 
 	unsigned cumulativeWeight = 0;
 	for (std::underlying_type_t<_item_indexes> i = IDI_GOLD; i <= IDI_LAST; i++) {
-		if (!IsItemAvailable(i))
-			continue;
 		const ItemData &item = AllItemsList[i];
-		if (item.dropRate == 0)
-			continue;
-		if (IsAnyOf(item.iSpell, SpellID::Resurrect, SpellID::HealOther) && !gbIsMultiplayer)
-			continue;
-		if (!isItemOkay(item))
-			continue;
-		cumulativeWeight += considerDropRate ? item.dropRate : 1;
+		cumulativeWeight += considerDropRate ? item.dropRate == 0 ? 1 : item.dropRate : 1;
 		ril.push_back({ static_cast<_item_indexes>(i), cumulativeWeight });
 	}
 	unsigned targetWeight = static_cast<unsigned>(RandomIntLessThan(static_cast<int>(cumulativeWeight)));
@@ -1393,16 +1422,18 @@ _item_indexes GetItemIndexForDroppableItem(bool considerDropRate, tl::function_r
 
 _item_indexes RndUItem(Monster *monster)
 {
-	int itemMaxLevel = ItemsGetCurrlevel() * 2;
+	int itemMaxLevel = ItemsGetCurrlevel() * 3;
 	if (monster != nullptr)
 		itemMaxLevel = monster->level(sgGameInitInfo.nDifficulty);
 	return GetItemIndexForDroppableItem(false, [&itemMaxLevel](const ItemData &item) {
-		if (item.itype == ItemType::Misc && item.iMiscId == IMISC_BOOK)
-			return true;
-		if (itemMaxLevel < item.iMinMLvl)
-			return false;
+		// Evita Gold e Miscellaneous
 		if (IsAnyOf(item.itype, ItemType::Gold, ItemType::Misc))
 			return false;
+			
+		// Não dropa itens de Quest e IMISC_EAR (orelhas de jogadores)
+		if (item.iClass == ICLASS_QUEST || item.iMiscId == IMISC_EAR)
+			return false;
+			
 		return true;
 	});
 }
@@ -1412,10 +1443,15 @@ _item_indexes RndAllItems()
 	if (GenerateRnd(100) > 25)
 		return IDI_GOLD;
 
-	int itemMaxLevel = ItemsGetCurrlevel() * 2;
+	int itemMaxLevel = ItemsGetCurrlevel() * 3;
 	return GetItemIndexForDroppableItem(false, [&itemMaxLevel](const ItemData &item) {
 		if (itemMaxLevel < item.iMinMLvl)
 			return false;
+			
+		// Não dropa itens de Quest e IMISC_EAR (orelhas de jogadores)
+		if (item.iClass == ICLASS_QUEST || item.iMiscId == IMISC_EAR)
+			return false;
+			
 		return true;
 	});
 }
@@ -1424,12 +1460,15 @@ _item_indexes RndTypeItems(ItemType itemType, int imid, int lvl)
 {
 	int itemMaxLevel = lvl * 2;
 	return GetItemIndexForDroppableItem(false, [&itemMaxLevel, &itemType, &imid](const ItemData &item) {
-		if (itemMaxLevel < item.iMinMLvl)
-			return false;
 		if (item.itype != itemType)
 			return false;
 		if (imid != -1 && item.iMiscId != imid)
 			return false;
+			
+		// Não dropa itens de Quest e IMISC_EAR (orelhas de jogadores)
+		if (item.iClass == ICLASS_QUEST || item.iMiscId == IMISC_EAR)
+			return false;
+			
 		return true;
 	});
 }
@@ -1736,6 +1775,10 @@ void PrintItemOil(char iDidx)
 		AddInfoBoxString(_("restore all life and mana"));
 		AddInfoBoxString(_("(works only in arenas)"));
 		break;
+	case IMISC_GEMDEF:
+		AddInfoBoxString(_("increases armor class by 10%"));
+		AddInfoBoxString(_("of armor, shields and helmets"));
+		break;		
 	}
 }
 
@@ -1836,7 +1879,7 @@ void PrintItemMisc(const Item &item)
 	const bool isOil = (item._iMiscId >= IMISC_USEFIRST && item._iMiscId <= IMISC_USELAST)
 	    || (item._iMiscId > IMISC_OILFIRST && item._iMiscId < IMISC_OILLAST)
 	    || (item._iMiscId > IMISC_RUNEFIRST && item._iMiscId < IMISC_RUNELAST)
-	    || item._iMiscId == IMISC_ARENAPOT;
+	    || item._iMiscId == IMISC_ARENAPOT || item._iMiscId == IMISC_GEMDEF;
 	const bool mouseRequiresTarget = (item._iMiscId == IMISC_SCROLLT && item._iSpell != SpellID::Flash)
 	    || (item._iMiscId == IMISC_SCROLL && IsAnyOf(item._iSpell, SpellID::TownPortal, SpellID::Identify));
 	const bool gamepadRequiresTarget = item.isScroll() && TargetsMonster(item._iSpell);
@@ -2387,23 +2430,12 @@ bool IsItemAvailable(int i)
 		if (IsAnyOf(i, 105, 107, 108, 110, 111, 113))
 			return false; // Unavailable scrolls
 	}
-
-	if (gbIsHellfire)
-		return true;
-
-	return (
-	           i != IDI_MAPOFDOOM                   // Cathedral Map
-	           && i != IDI_LGTFORGE                 // Bovine Plate
-	           && (i < IDI_OIL || i > IDI_GREYSUIT) // Hellfire exclusive items
-	           && (i < 83 || i > 86)                // Oils
-	           && i != 92                           // Scroll of Search
-	           && (i < 161 || i > 165)              // Runes
-	           && i != IDI_SORCERER                 // Short Staff of Mana
-	           )
-	    || (
-	        // Bard items are technically Hellfire-exclusive
-	        // but are just normal items with adjusted stats.
-	        *GetOptions().Gameplay.testBard && IsAnyOf(i, IDI_BARDSWORD, IDI_BARDDAGGER));
+		
+	// Não permitir dropar itens de quest e orelhas de jogadores
+	if (AllItemsList[i].iClass == ICLASS_QUEST || AllItemsList[i].iMiscId == IMISC_EAR)
+		return false;
+		
+	return true;
 }
 
 uint8_t GetOutlineColor(const Item &item, bool checkReq)
@@ -2422,7 +2454,7 @@ uint8_t GetOutlineColor(const Item &item, bool checkReq)
 
 bool IsUniqueAvailable(int i)
 {
-	return gbIsHellfire || i <= 89;
+	return true;
 }
 
 void ClearUniqueItemFlags()
@@ -3151,6 +3183,9 @@ void GetItemAttrs(Item &item, _item_indexes itemData, int lvl)
 	if (gbIsHellfire && item._iMiscId == IMISC_OILOF)
 		GetOilType(item, lvl);
 
+	if (gbIsHellfire && item._iMiscId == IMISC_GEMDEF)
+		GetGemType(item, lvl);	
+
 	if (item._itype != ItemType::Gold)
 		return;
 
@@ -3199,21 +3234,18 @@ Item *SpawnUnique(_unique_items uid, Point position, std::optional<int> level /*
 	while (AllItemsList[idx].iItemId != UniqueItems[uid].UIItemId)
 		idx++;
 
-	if (sgGameInitInfo.nDifficulty == DIFF_NORMAL) {
-		GetItemAttrs(item, static_cast<_item_indexes>(idx), curlv);
-		GetUniqueItem(*MyPlayer, item, uid);
-		SetupItem(item);
-	} else {
+	
 		if (level)
 			curlv = *level;
 		const ItemData &uniqueItemData = AllItemsList[idx];
-		_item_indexes idx = GetItemIndexForDroppableItem(false, [&uniqueItemData](const ItemData &item) {
+	auto dropIdx = GetItemIndexForDroppableItem(false, [&uniqueItemData](const ItemData &item) {
 			return item.itype == uniqueItemData.itype;
 		});
-		SetupAllItems(*MyPlayer, item, idx, AdvanceRndSeed(), curlv * 2, 15, true, false);
-		TryRandomUniqueItem(item, idx, curlv * 2, 15, true, false);
+	_item_indexes itemIdx = static_cast<_item_indexes>(dropIdx);
+	SetupAllItems(*MyPlayer, item, itemIdx, AdvanceRndSeed(), curlv * 2, 15, true, false);
+	TryRandomUniqueItem(item, itemIdx, curlv * 2, 15, true, false);
 		SetupItem(item);
-	}
+	
 
 	if (sendmsg)
 		NetSendCmdPItem(false, CMD_SPAWNITEM, item.position, item);
@@ -3243,13 +3275,18 @@ void GetSuperItemSpace(Point position, int8_t inum)
 
 _item_indexes RndItemForMonsterLevel(int8_t monsterLevel)
 {
-	if (GenerateRnd(100) > 40)
+	if (GenerateRnd(100) > 60)
 		return IDI_NONE;
 
-	if (GenerateRnd(100) > 25)
+	if (GenerateRnd(100) > 40)
 		return IDI_GOLD;
 
 	return GetItemIndexForDroppableItem(true, [&monsterLevel](const ItemData &item) {
+		// Não dropa itens de Quest e IMISC_EAR (orelhas de jogadores)
+		if (item.iClass == ICLASS_QUEST || item.iMiscId == IMISC_EAR)
+			return false;
+		
+		// Verifica se o monstro tem nível alto o suficiente para dropar esse item
 		return item.iMinMLvl <= monsterLevel;
 	});
 }
@@ -3414,8 +3451,11 @@ void SpawnItem(Monster &monster, Point position, bool sendmsg, bool spawn /*= fa
 
 	bool dropsSpecialTreasure = (monster.data().treasure & T_UNIQ) != 0;
 	bool dropBrain = Quests[Q_MUSHROOM]._qactive == QUEST_ACTIVE && Quests[Q_MUSHROOM]._qvar1 == QS_MUSHGIVEN;
+	if (GenerateRnd(10) <= 2) {
+		dropsSpecialTreasure = true;
+	}
 
-	if (dropsSpecialTreasure && !UseMultiplayerQuests()) {
+	if (dropsSpecialTreasure) {
 		Item *uniqueItem = SpawnUnique(static_cast<_unique_items>(monster.data().treasure & T_MASK), position, std::nullopt, false);
 		if (uniqueItem != nullptr && sendmsg)
 			NetSendCmdPItem(false, CMD_DROPITEM, uniqueItem->position, *uniqueItem);
@@ -3441,11 +3481,15 @@ void SpawnItem(Monster &monster, Point position, bool sendmsg, bool spawn /*= fa
 		// Normal monster
 		if ((monster.data().treasure & T_NODROP) != 0)
 			return;
-		onlygood = false;
+		//onlygood = false;
 		idx = RndItemForMonsterLevel(static_cast<int8_t>(monster.level(sgGameInitInfo.nDifficulty)));
 	}
 
 	if (idx == IDI_NONE)
+		return;
+		
+	// Verificação extra para garantir que não drope IMISC_EAR ou itens de quest
+	if (AllItemsList[idx].iClass == ICLASS_QUEST || AllItemsList[idx].iMiscId == IMISC_EAR)
 		return;
 
 	if (ActiveItemCount >= MAXITEMS)
@@ -3474,6 +3518,10 @@ void CreateRndItem(Point position, bool onlygood, bool sendmsg, bool delta)
 {
 	_item_indexes idx = onlygood ? RndUItem(nullptr) : RndAllItems();
 
+	// Verificação extra para garantir que não drope IMISC_EAR ou itens de quest
+	if (idx != IDI_NONE && (AllItemsList[idx].iClass == ICLASS_QUEST || AllItemsList[idx].iMiscId == IMISC_EAR))
+		return;
+
 	SetupBaseItem(position, idx, onlygood, sendmsg, delta);
 }
 
@@ -3501,6 +3549,10 @@ void CreateTypeItem(Point position, bool onlygood, ItemType itemType, int imisc,
 		idx = RndTypeItems(itemType, imisc, curlv);
 	else
 		idx = IDI_GOLD;
+		
+	// Verificação extra para garantir que não drope IMISC_EAR ou itens de quest
+	if (idx != IDI_NONE && (AllItemsList[idx].iClass == ICLASS_QUEST || AllItemsList[idx].iMiscId == IMISC_EAR))
+		return;
 
 	SetupBaseItem(position, idx, onlygood, sendmsg, delta, spawn);
 }
@@ -4303,6 +4355,7 @@ void UseItem(Player &player, item_misc_id mid, SpellID spellID, int spellFrom)
 	case IMISC_MAPOFDOOM:
 		doom_init();
 		break;
+	case IMISC_GEMDEF:		
 	case IMISC_OILACC:
 	case IMISC_OILMAST:
 	case IMISC_OILSHARP:
@@ -4582,7 +4635,13 @@ void SpawnBoy(int lvl)
 			break;
 		}
 		default:
-			app_fatal("Invalid item spawn");
+			const auto *const mostValuablePlayerArmor = myPlayer.GetMostValuableItem(
+			    [](const Item &item) {
+				    return IsAnyOf(item._itype, ItemType::LightArmor, ItemType::MediumArmor, ItemType::HeavyArmor);
+			    });
+
+			ivalue = mostValuablePlayerArmor == nullptr ? 0 : mostValuablePlayerArmor->_iIvalue;
+			break;
 		}
 		ivalue = ivalue * 4 / 5; // avoids forced int > float > int conversion
 
@@ -5018,6 +5077,16 @@ bool ApplyOilToItem(Item &item, Player &player)
 			item._iAC += RandomIntBetween(3, 5);
 		}
 		break;
+	case IMISC_GEMDEF:
+		if (item._iClass == ICLASS_WEAPON) {
+			return false;
+		}
+		if (item._iAC > 0) {
+			int acBonus = item._iAC / 10;
+			if (acBonus < 1) acBonus = 1;
+			item._iAC += acBonus;
+		}
+		break; 		
 	default:
 		return false;
 	}

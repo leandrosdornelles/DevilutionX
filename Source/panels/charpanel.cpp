@@ -24,6 +24,12 @@
 #include "utils/status_macros.hpp"
 #include "utils/str_cat.hpp"
 #include "utils/surface_to_clx.hpp"
+#include "engine/clx_sprite.hpp"
+#include "engine/rectangle.hpp"
+#include "options.h"
+#include "qol/chatlog.h"
+#include "qol/stash.h"
+#include "utils/utf8.hpp"
 
 namespace devilution {
 
@@ -297,7 +303,7 @@ tl::expected<void, std::string> LoadCharPanel()
 		}
 	}
 
-	Panel = SurfaceToClx(out);
+		Panel = SurfaceToClx(out);
 	return {};
 }
 
@@ -321,6 +327,41 @@ void DrawChr(const Surface &out)
 		}
 	}
 	DrawStatButtons(out);
+    
+    // Exibe o nível de sede de sangue para o Vampiro
+    if (InspectPlayer->_pClass == HeroClass::Vampiro) {
+        const char* bloodLevelText = nullptr;
+        UiFlags styleFlags = UiFlags::ColorWhite;
+        
+        // Define o texto e a cor com base no estado do vampiro
+        switch (InspectPlayer->_pVampireState) {
+        case VampireState::Normal:
+            bloodLevelText = N_("Sede: Saciado");
+            styleFlags = UiFlags::ColorWhitegold;
+            break;
+        case VampireState::Thirsty:
+            bloodLevelText = N_("Sede: Com sede");
+            styleFlags = UiFlags::ColorWhite;
+            break;
+        case VampireState::Starving:
+            bloodLevelText = N_("Sede: Faminto");
+            styleFlags = UiFlags::ColorYellow;
+            break;
+        case VampireState::Critical:
+            bloodLevelText = N_("Sede: CRÍTICA");
+            styleFlags = UiFlags::ColorRed;
+            break;
+        }
+        
+        // Desenha o texto na parte inferior do painel
+        Point bloodTextPos = GetPanelPosition(UiPanels::Character, { 120, 350 });
+        std::string bloodText = fmt::format("{} ({}%)", LanguageTranslate(bloodLevelText), InspectPlayer->_pBloodLevel);
+        DrawString(
+            out,
+            bloodText,
+            { bloodTextPos, { 150, 20 } },
+            { .flags = UiFlags::AlignCenter | styleFlags });
+    }
 }
 
 } // namespace devilution

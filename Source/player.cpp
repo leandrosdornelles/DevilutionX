@@ -681,11 +681,22 @@ bool PlrHitMonst(Player &player, Monster &monster, bool adjacentDamage = false)
 	}
 	if ((monster.hitPoints >> 6) <= 0) {
 		M_StartKill(monster, player);
+        
+        // Vampiro recupera sangue ao matar monstros
+        if (player._pClass == HeroClass::Vampiro) {
+            // Quantidade de sangue baseada no MonsterType, usando um valor fixo para simplificar
+            int bloodGain = 10;
+            player._pBloodLevel = std::min(100, player._pBloodLevel + bloodGain);
+            if (&player == MyPlayer) {
+                RedrawComponent(PanelDrawComponent::Health);
+            }
+        }
 	} else {
 		if (monster.mode != MonsterMode::Petrified && HasAnyOf(player._pIFlags, ItemSpecialEffect::Knockback))
 			M_GetKnockback(monster, player.position.tile);
 		M_StartHit(monster, player, dam);
 	}
+
 	return true;
 }
 
@@ -2690,6 +2701,7 @@ StartPlayerKill(Player &player, DeathReason deathReason)
 				case HeroClass::Monk:
 				case HeroClass::Bard:
 				case HeroClass::Barbarian:
+				case HeroClass::Vampiro:
 					ear._iCurs = ICURS_EAR_ROGUE;
 					break;
 				}

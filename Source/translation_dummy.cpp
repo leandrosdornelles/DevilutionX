@@ -280,6 +280,7 @@ const char *IDI_LGTFORGE_NAME = N_("Bovine Plate");
 const char *IDI_LAZSTAFF_NAME = N_("Staff of Lazarus");
 const char *IDI_RESURRECT_NAME = N_("Scroll of Resurrect");
 const char *IDI_OIL_NAME = N_("Blacksmith Oil");
+const char *IDI_GEMDEF_NAME = N_("Gema da Defesa");
 const char *IDI_SHORTSTAFF_NAME = N_("Short Staff");
 const char *IDI_BARDSWORD_NAME = N_("Sword");
 const char *IDI_BARDDAGGER_NAME = N_("Dagger");

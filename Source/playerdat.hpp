@@ -21,8 +21,9 @@ enum class HeroClass : uint8_t {
 	Monk,
 	Bard,
 	Barbarian,
+	Vampiro,
 
-	LAST = Barbarian
+	LAST = Vampiro
 };
 
 struct PlayerData {

@@ -1,0 +1,8 @@
+if (devilution::gbIsHellfire && item._iMiscId == devilution::IMISC_OILOF)
+GetOilType(item, lvl);
+
+	if (devilution::gbIsHellfire && item._iMiscId == devilution::IMISC_GEMDEF)
+GetGemType(item, lvl);
+
+	if (item._itype != devilution::ItemType::Gold)
+return;

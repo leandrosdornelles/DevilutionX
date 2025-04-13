@@ -9,6 +9,16 @@ if (buildAsApplication) {
 android {
 	ndkVersion '28.0.13004108'
 	compileSdk 35
+	
+	signingConfigs {
+		release {
+			storeFile file("keystore/devilutionx.keystore")
+			storePassword "devilutionx"
+			keyAlias "devilutionx"
+			keyPassword "devilutionx"
+		}
+	}
+	
 	defaultConfig {
 		if (buildAsApplication) {
 			applicationId "org.diasurgical.devilutionx"
@@ -30,6 +40,7 @@ android {
 		}
 		release {
 			minifyEnabled false
+			signingConfig signingConfigs.release
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
 	}

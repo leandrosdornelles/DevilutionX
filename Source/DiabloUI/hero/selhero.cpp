@@ -170,6 +170,7 @@ void SelheroListSelect(size_t value)
 				vecSelHeroDlgItems.push_back(std::make_unique<UiListItem>(_("Barbarian"), static_cast<int>(HeroClass::Barbarian)));
 			}
 		}
+		vecSelHeroDlgItems.push_back(std::make_unique<UiListItem>(_("Vampiro"), static_cast<int>(HeroClass::Vampiro)));
 		if (vecSelHeroDlgItems.size() > 4)
 			itemH = 26;
 		int itemY = static_cast<int>(246 + (176 - vecSelHeroDlgItems.size() * itemH) / 2);

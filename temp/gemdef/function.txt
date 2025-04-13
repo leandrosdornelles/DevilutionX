@@ -1,0 +1,25 @@
+void GetGemType(Item &item, int maxLvl) {
+	int cnt = 1;
+	int8_t rnd[32] = { 0 };
+
+	if (!devilution::gbIsMultiplayer) {
+		if (maxLvl == 0)
+			maxLvl = 1;
+
+		cnt = 0;
+		for (size_t j = 0; j < sizeof(GemLevels) / sizeof(GemLevels[0]); j++) {
+			if (GemLevels[j] <= maxLvl) {
+				rnd[cnt] = static_cast<int8_t>(j);
+				cnt++;
+			}
+		}
+	}
+
+	int8_t t = rnd[devilution::GenerateRnd(cnt)];
+
+	devilution::CopyUtf8(item._iName, GemNames[t], devilution::ItemNameLength);
+	devilution::CopyUtf8(item._iIName, GemNames[t], devilution::ItemNameLength);
+	item._iMiscId = GemMagic[t];
+	item._ivalue = GemValues[t];
+	item._iIvalue = GemValues[t];
+}
